@@ -43,7 +43,7 @@ services:
       - WT_SPICEDB_HTTP_PORT=${WT_SPICEDB_HTTP_PORT:-8443}
   ```
 
-  Compute secondary ports in `scripts/wt-post-setup.sh`:
+  Compute secondary ports in your post-setup hook:
   ```bash
   if [ -n "$WT_SLOT" ] && [ "$WT_SLOT" != "0" ]; then
       echo "WT_SPICEDB_HTTP_PORT=$((8443 + WT_SLOT))" >> .env.local
