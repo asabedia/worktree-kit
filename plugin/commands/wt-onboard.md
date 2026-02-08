@@ -1,11 +1,11 @@
 ---
-description: Onboard this project to worktree-kit — interactive setup wizard
+description: Onboard this project to worktree-wizard — interactive setup wizard
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Task
 ---
 
-Integrate worktree-kit into the current project. This is a step-by-step interactive wizard.
+Integrate worktree-wizard into the current project. This is a step-by-step interactive wizard.
 
-Use the `worktree-kit-integration` skill for all conventions (wt.base-port labels, WT_* env var patterns, volume mounts, hot-reload configs, Dockerfile patterns per framework).
+Use the `worktree-wizard-integration` skill for all conventions (wt.base-port labels, WT_* env var patterns, volume mounts, hot-reload configs, Dockerfile patterns per framework).
 
 ## Step 1: Analyze Project
 
@@ -16,18 +16,18 @@ If blockers are found:
 - Tell the user exactly what steps to take (e.g., "Create a main.py entry point", "Initialize a git repo with `git init`")
 - Stop here — do not proceed until blockers are resolved
 
-If the project already has full worktree-kit integration (justfile import + compose with wt.* labels), inform the user and ask if they want to re-run setup or update specific parts.
+If the project already has full worktree-wizard integration (justfile import + compose with wt.* labels), inform the user and ask if they want to re-run setup or update specific parts.
 
 ## Step 2: Install Method
 
-Ask the user how to add worktree-kit to their project using AskUserQuestion:
-- **Git submodule** — `git submodule add <repo-url> worktree-kit`
-- **Copy files** — copy worktree-kit directory into the project
+Ask the user how to add worktree-wizard to their project using AskUserQuestion:
+- **Git submodule** — `git submodule add <repo-url> worktree-wizard`
+- **Copy files** — copy worktree-wizard directory into the project
 
 For git submodule: ask the user for the repository URL (or suggest the default).
-For copy: ask the user for the source path to worktree-kit.
+For copy: ask the user for the source path to worktree-wizard.
 
-Execute the chosen installation method. Verify worktree-kit files are present (specifically `worktree.just` and `scripts/` directory).
+Execute the chosen installation method. Verify worktree-wizard files are present (specifically `worktree.just` and `scripts/` directory).
 
 ## Step 3: Configure Services (step-by-step)
 
@@ -86,9 +86,9 @@ When writing the justfile:
 
 ## Step 6: Validate
 
-Run the worktree-kit doctor script to verify the setup:
+Run the worktree-wizard doctor script to verify the setup:
 ```
-worktree-kit/scripts/wt-doctor.sh .
+worktree-wizard/scripts/wt-doctor.sh .
 ```
 
 If validation fails, explain what's wrong and fix it.

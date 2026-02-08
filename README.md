@@ -1,8 +1,8 @@
-# worktree-kit
+# worktree-wizard
 
 Run parallel feature branches with isolated Docker ports and data — zero config conflicts.
 
-**The problem:** You're working on `feature/auth` with `docker compose up`, then need to context-switch to `feature/payments`. You either tear down your stack or get port conflicts. With worktree-kit, each branch gets its own worktree with automatically offset ports and isolated data directories.
+**The problem:** You're working on `feature/auth` with `docker compose up`, then need to context-switch to `feature/payments`. You either tear down your stack or get port conflicts. With worktree-wizard, each branch gets its own worktree with automatically offset ports and isolated data directories.
 
 ## Quickstart
 
@@ -10,8 +10,8 @@ Run parallel feature branches with isolated Docker ports and data — zero confi
 
 ```bash
 # Install the plugin
-/plugin marketplace add asabedia/worktree-kit
-/plugin install worktree-wizard@worktree-kit
+/plugin marketplace add asabedia/worktree-wizard
+/plugin install worktree-wizard
 
 # From your project repo, run the onboarding wizard
 /wt-onboard
@@ -23,10 +23,10 @@ The wizard scans your project, asks a few questions, and generates your `docker-
 
 ```bash
 # 1. Add to your project
-git submodule add https://github.com/asabedia/worktree-kit.git worktree-kit
+git submodule add https://github.com/asabedia/worktree-wizard.git worktree-wizard
 
 # 2. Create a justfile
-echo 'import "worktree-kit/worktree.just"' > justfile
+echo 'import "worktree-wizard/worktree.just"' > justfile
 
 # 3. Add wt.base-port labels to docker-compose.yml (see Setup section below)
 
@@ -56,18 +56,18 @@ Data directories isolate per slot: `.docker-data/slot-1/db/`, `.docker-data/slot
 - `docker` + `docker compose` (for Docker features)
 - `jq` (optional — improves YAML parsing; grep fallback works without it)
 
-### 1. Add worktree-kit to your project
+### 1. Add worktree-wizard to your project
 
 **Option A — git submodule** (recommended, stays updated):
 
 ```bash
-git submodule add https://github.com/asabedia/worktree-kit.git worktree-kit
+git submodule add https://github.com/asabedia/worktree-wizard.git worktree-wizard
 ```
 
 **Option B — copy** (simpler, no submodule dependency):
 
 ```bash
-cp -r /path/to/worktree-kit ./worktree-kit
+cp -r /path/to/worktree-wizard ./worktree-wizard
 ```
 
 ### 2. Import in your justfile
@@ -75,7 +75,7 @@ cp -r /path/to/worktree-kit ./worktree-kit
 Create a `justfile` in your project root (or add to your existing one):
 
 ```just
-import "worktree-kit/worktree.just"
+import "worktree-wizard/worktree.just"
 
 # your project recipes below
 dev:
@@ -91,7 +91,7 @@ services:
   api:
     build: .
     labels:
-      wt.base-port: "8000"            # tells worktree-kit the base port
+      wt.base-port: "8000"            # tells worktree-wizard the base port
     ports:
       - "${WT_API_PORT:-8000}:8000"    # host port is dynamic, container port stays fixed
 
@@ -107,8 +107,8 @@ services:
 ```
 
 **Key points:**
-- `wt.base-port` — the port number used in slot 0; worktree-kit adds the slot number to compute the host port
-- `wt.data-dir` — opt-in; tells worktree-kit this service needs an isolated data directory per slot
+- `wt.base-port` — the port number used in slot 0; worktree-wizard adds the slot number to compute the host port
+- `wt.data-dir` — opt-in; tells worktree-wizard this service needs an isolated data directory per slot
 - The `:-default` syntax means the main repo (slot 0) works without any env vars set
 - Container-internal ports stay the same — only host-mapped ports change
 - Services talk to each other via Docker's internal network (service names), unaffected by port offsets
@@ -290,7 +290,7 @@ wt-max-slots      := "9"              # max concurrent worktrees (1-9)
 wt-data-root      := ".docker-data"   # docker data root directory
 wt-health-timeout := "60"             # seconds to wait for service health
 
-import "worktree-kit/worktree.just"
+import "worktree-wizard/worktree.just"
 ```
 
 Or via environment variables:
@@ -304,7 +304,7 @@ Or via environment variables:
 | `wt.base-port`  | Yes*     | Base port number for the service           |
 | `wt.data-dir`   | No       | Container path that needs data isolation   |
 
-\* Required for port isolation. Services without labels are ignored by worktree-kit but work normally in compose.
+\* Required for port isolation. Services without labels are ignored by worktree-wizard but work normally in compose.
 
 ## Auto-Detected Dependencies
 
@@ -340,8 +340,8 @@ The `worktree-wizard` plugin provides an interactive `/wt-onboard` command that 
 ### Install
 
 ```bash
-/plugin marketplace add asabedia/worktree-kit
-/plugin install worktree-wizard@worktree-kit
+/plugin marketplace add asabedia/worktree-wizard
+/plugin install worktree-wizard
 ```
 
 ### What it does

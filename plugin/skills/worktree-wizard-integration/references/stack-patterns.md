@@ -1,6 +1,6 @@
 # Stack Patterns Reference
 
-Per-framework Dockerfile, dev command, and compose service patterns for worktree-kit integration.
+Per-framework Dockerfile, dev command, and compose service patterns for worktree-wizard integration.
 
 ## Python
 

@@ -1,20 +1,20 @@
 ---
-name: worktree-kit-integration
-description: This skill should be used when the user asks to "set up worktree-kit", "integrate worktree-kit", "add worktree support", "create docker-compose for worktrees", "add wt labels", "configure hot-reload for Docker", "set up volume mounts", "isolate ports per worktree", "onboard project to worktree-kit", or needs guidance on wt.base-port labels, WT_* env var patterns, slot-based port isolation, dev-mode Dockerfiles, or hot-reload configurations per framework.
+name: worktree-wizard-integration
+description: This skill should be used when the user asks to "set up worktree-wizard", "integrate worktree-wizard", "add worktree support", "create docker-compose for worktrees", "add wt labels", "configure hot-reload for Docker", "set up volume mounts", "isolate ports per worktree", "onboard project to worktree-wizard", or needs guidance on wt.base-port labels, WT_* env var patterns, slot-based port isolation, dev-mode Dockerfiles, or hot-reload configurations per framework.
 version: 0.1.0
 ---
 
-# worktree-kit Integration Knowledge
+# worktree-wizard Integration Knowledge
 
 ## Purpose
 
-Provide the domain knowledge needed to correctly integrate worktree-kit into any project. This includes docker-compose conventions, env var patterns, volume mount strategies, hot-reload configurations, and justfile setup.
+Provide the domain knowledge needed to correctly integrate worktree-wizard into any project. This includes docker-compose conventions, env var patterns, volume mount strategies, hot-reload configurations, and justfile setup.
 
 ## Core Conventions
 
 ### Port Isolation via Labels
 
-Add a `wt.base-port` label to every service needing port isolation. worktree-kit adds the slot number (1-9) to compute the host port per worktree.
+Add a `wt.base-port` label to every service needing port isolation. worktree-wizard adds the slot number (1-9) to compute the host port per worktree.
 
 ```yaml
 services:
@@ -99,14 +99,14 @@ For per-framework Dockerfile patterns, dev commands, and configuration details, 
 Import worktree.just from the project justfile:
 
 ```just
-import "worktree-kit/worktree.just"
+import "worktree-wizard/worktree.just"
 ```
 
 Override config vars **before** the import if needed:
 
 ```just
 wt-health-timeout := "90"
-import "worktree-kit/worktree.just"
+import "worktree-wizard/worktree.just"
 ```
 
 ## .wt-required-tools

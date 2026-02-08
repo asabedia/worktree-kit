@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "worktree-kit",
+  "name": "worktree-wizard",
   "version": "0.1.0",
   "description": "Git worktree + Docker isolation toolkit with interactive onboarding",
   "owner": {
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "worktree-wizard",
-      "description": "Interactive onboarding wizard that integrates worktree-kit into existing projects — analyzes codebase, generates docker-compose with wt.* labels, sets up hot-reload, volume mounts, and justfile integration.",
+      "description": "Interactive onboarding wizard that integrates worktree-wizard into existing projects — analyzes codebase, generates docker-compose with wt.* labels, sets up hot-reload, volume mounts, and justfile integration.",
       "source": "./plugin",
       "version": "0.1.0",
       "category": "development",

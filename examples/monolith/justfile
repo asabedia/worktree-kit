@@ -12,7 +12,7 @@ test:
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
-    eval $(worktree-kit/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
+    eval $(worktree-wizard/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
     docker compose exec backend python -m pytest
 
 # Run database migrations
@@ -21,5 +21,5 @@ migrate:
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
-    eval $(worktree-kit/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
+    eval $(worktree-wizard/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
     docker compose exec backend alembic upgrade head
