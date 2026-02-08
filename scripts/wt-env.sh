@@ -19,7 +19,7 @@ fi
 
 # Normalize service name: uppercase, hyphens/dots to underscores
 normalize_name() {
-    echo "$1" | tr '[:lower:]' '[:upper:]' | tr '-.' '__'
+    echo "$1" | tr '[:lower:]' '[:upper:]' | tr '\.\-' '__'
 }
 
 # Compute data path for a service
@@ -88,7 +88,7 @@ try_grep_fallback() {
 
         # Detect service name (top-level key under services:)
         if echo "$line" | grep -qE '^  [a-zA-Z]'; then
-            if echo "$line" | grep -qE '^  [a-zA-Z][a-zA-Z0-9_-]*:'; then
+            if echo "$line" | grep -qE '^  [a-zA-Z][a-zA-Z0-9._-]*:'; then
                 current_service=$(echo "$line" | sed 's/^  //;s/:.*//')
                 in_labels=0
             fi
@@ -110,7 +110,7 @@ try_grep_fallback() {
 
             local base_port="" data_dir=""
             if echo "$line" | grep -q 'wt\.base-port'; then
-                base_port=$(echo "$line" | sed 's/.*wt\.base-port[":]*\s*//;s/[" ]*$//')
+                base_port=$(echo "$line" | sed 's/.*wt\.base-port:[[:space:]]*//;s/[" ]*$//;s/^[" ]*//')
                 base_port=$(echo "$base_port" | tr -d '"' | tr -d "'")
                 if [ -n "$base_port" ]; then
                     local name
@@ -123,7 +123,7 @@ try_grep_fallback() {
                 fi
             fi
             if echo "$line" | grep -q 'wt\.data-dir'; then
-                data_dir=$(echo "$line" | sed 's/.*wt\.data-dir[":]*\s*//;s/[" ]*$//')
+                data_dir=$(echo "$line" | sed 's/.*wt\.data-dir:[[:space:]]*//;s/[" ]*$//;s/^[" ]*//')
                 data_dir=$(echo "$data_dir" | tr -d '"' | tr -d "'")
                 if [ -n "$data_dir" ]; then
                     local name

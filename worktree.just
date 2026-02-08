@@ -18,6 +18,7 @@ wt-scripts   := source_directory() / "scripts"
 wt-up *args:
     #!/bin/bash
     set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
     if [ "$SLOT" != "0" ]; then
@@ -30,6 +31,7 @@ wt-up *args:
 wt-down *args:
     #!/bin/bash
     set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
     docker compose down {{args}}
@@ -38,6 +40,7 @@ wt-down *args:
 wt-logs *args:
     #!/bin/bash
     set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
     docker compose logs -f {{args}}
@@ -45,6 +48,7 @@ wt-logs *args:
 # Show current slot and computed ports
 wt-status:
     #!/bin/bash
+    [ -f .env.local ] && set -a && . .env.local && set +a
     SLOT="${WT_SLOT:-0}"
     if [ "$SLOT" = "0" ]; then
         echo "Main repo (slot 0) — using default ports"
@@ -55,7 +59,8 @@ wt-status:
     env | grep '^WT_' | sort || echo "(no wt.* labels found)"
     echo ""
     echo "Active slots:"
-    {{wt-scripts}}/wt-slot.sh list "{{wt-dir}}"
+    MAIN_ROOT="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
+    {{wt-scripts}}/wt-slot.sh list "$MAIN_ROOT/{{wt-dir}}"
 
 # --- Worktree lifecycle ---
 
@@ -82,7 +87,7 @@ wt-rm branch:
     if [ -f "$WT_PATH/.env.local" ]; then
         SLOT=$(grep '^WT_SLOT=' "$WT_PATH/.env.local" 2>/dev/null | tail -1 | cut -d= -f2)
     fi
-    git worktree remove "$WT_PATH"
+    git worktree remove "$WT_PATH" --force
     git branch -d {{branch}} 2>/dev/null || git branch -D {{branch}}
     # Release slot
     if [ -n "$SLOT" ] && [ "$SLOT" != "0" ]; then
@@ -107,7 +112,8 @@ wt-list:
     git worktree list
     echo ""
     echo "=== Slot Assignments ==="
-    {{wt-scripts}}/wt-slot.sh list "{{wt-dir}}"
+    MAIN_ROOT="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
+    {{wt-scripts}}/wt-slot.sh list "$MAIN_ROOT/{{wt-dir}}"
 
 # Prune stale worktrees
 wt-prune:
