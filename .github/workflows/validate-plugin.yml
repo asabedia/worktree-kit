@@ -5,10 +5,12 @@ on:
     paths:
       - 'plugin/**'
       - '.claude-plugin/**'
+      - '.github/workflows/validate-plugin.yml'
   pull_request:
     paths:
       - 'plugin/**'
       - '.claude-plugin/**'
+      - '.github/workflows/validate-plugin.yml'
 
 jobs:
   validate:
