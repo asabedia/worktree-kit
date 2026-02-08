@@ -4,6 +4,37 @@ Run parallel feature branches with isolated Docker ports and data — zero confi
 
 **The problem:** You're working on `feature/auth` with `docker compose up`, then need to context-switch to `feature/payments`. You either tear down your stack or get port conflicts. With worktree-kit, each branch gets its own worktree with automatically offset ports and isolated data directories.
 
+## Quickstart
+
+**Using Claude Code** (recommended — generates everything for you):
+
+```bash
+# Install the plugin
+/plugin marketplace add asabedia/worktree-kit
+/plugin install worktree-kit-onboard@worktree-kit
+
+# From your project repo, run the onboarding wizard
+/wt-onboard
+```
+
+The wizard scans your project, asks a few questions, and generates your `docker-compose.yml`, `justfile`, Dockerfiles, and hot-reload configs.
+
+**Manual setup** (4 steps):
+
+```bash
+# 1. Add to your project
+git submodule add https://github.com/asabedia/worktree-kit.git worktree-kit
+
+# 2. Create a justfile
+echo 'import "worktree-kit/worktree.just"' > justfile
+
+# 3. Add wt.base-port labels to docker-compose.yml (see Setup section below)
+
+# 4. Use it
+just wt-dev feature/auth    # creates worktree + starts Docker + health-checks
+cd .worktrees/feature/auth   # ready to work
+```
+
 ## How It Works
 
 Each worktree gets a **slot** (1–9). Ports offset by slot number:
@@ -30,7 +61,7 @@ Data directories isolate per slot: `.docker-data/slot-1/db/`, `.docker-data/slot
 **Option A — git submodule** (recommended, stays updated):
 
 ```bash
-git submodule add https://github.com/user/worktree-kit.git worktree-kit
+git submodule add https://github.com/asabedia/worktree-kit.git worktree-kit
 ```
 
 **Option B — copy** (simpler, no submodule dependency):
@@ -301,6 +332,30 @@ For custom post-setup logic (e.g., running migrations, seeding data), create an 
 echo "Running migrations..."
 just db-migrate
 ```
+
+## Claude Code Plugin
+
+The `worktree-kit-onboard` plugin provides an interactive `/wt-onboard` command that automates the entire setup process.
+
+### Install
+
+```bash
+/plugin marketplace add asabedia/worktree-kit
+/plugin install worktree-kit-onboard@worktree-kit
+```
+
+### What it does
+
+Run `/wt-onboard` from any project repo. The wizard:
+
+1. Scans your codebase — detects stack (Python, Node, Go, Rust, Ruby, Java), frameworks, services, existing Dockerfiles
+2. Walks through each service — confirms name, port, Dockerfile, volume mounts, hot-reload command
+3. Generates all files — `docker-compose.yml` with `wt.*` labels, `justfile`, Dockerfiles, `.wt-required-tools`, post-setup hooks
+4. Validates — runs `wt-doctor.sh` to verify everything works
+
+Supports single-service repos and full-stack monoliths (backend + frontend).
+
+If something blocks integration (no git repo, no entrypoint), it tells you exactly what to fix.
 
 ## Examples
 
