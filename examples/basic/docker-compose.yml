@@ -1,0 +1,7 @@
+services:
+  redis:
+    image: redis:7-alpine
+    labels:
+      wt.base-port: "6379"
+    ports:
+      - "${WT_REDIS_PORT:-6379}:6379"

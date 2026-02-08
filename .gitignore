@@ -1,0 +1,4 @@
+.worktrees/
+.docker-data/
+.env*.local
+.DS_Store

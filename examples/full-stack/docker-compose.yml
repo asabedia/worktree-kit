@@ -1,0 +1,32 @@
+services:
+  api:
+    build: ./api
+    labels:
+      wt.base-port: "8000"
+    ports:
+      - "${WT_API_PORT:-8000}:8000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/myapp
+
+  mongo:
+    image: mongo:7
+    labels:
+      wt.base-port: "27017"
+      wt.data-dir: "/data/db"
+    ports:
+      - "${WT_MONGO_PORT:-27017}:27017"
+    volumes:
+      - ${WT_MONGO_DATA:-./.docker-data/mongo}:/data/db
+
+  web:
+    build: .
+    labels:
+      wt.base-port: "3000"
+    ports:
+      - "${WT_WEB_PORT:-3000}:3000"
+    environment:
+      - API_URL=http://localhost:${WT_API_PORT:-8000}
+    depends_on:
+      - api

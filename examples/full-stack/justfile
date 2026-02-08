@@ -1,0 +1,10 @@
+# Full-stack example (API + Mongo + Web)
+
+import "../../worktree.just"
+
+# Project-specific recipes below
+dev:
+    npm run dev
+
+api:
+    cd api && uvicorn main:app --reload
