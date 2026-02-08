@@ -2,7 +2,7 @@
 # wt-deps.sh — Auto-detect and install project dependencies
 # Usage: wt-deps.sh [directory]
 #
-# Supports: Node (npm/pnpm/yarn/bun), Python (pip/poetry/uv), Go, Rust
+# Supports: Node (npm/pnpm/yarn/bun), Python (pip/poetry/uv), Go, Rust, JVM (Gradle/Maven)
 
 set -euo pipefail
 
@@ -70,6 +70,38 @@ if [ -f "Cargo.toml" ]; then
     echo "Fetching Rust crates..."
     cargo fetch
     installed=1
+fi
+
+# --- JVM (Gradle/Maven) ---
+if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+    echo "Installing JVM deps (Gradle)..."
+    if [ -f "./gradlew" ]; then
+        ./gradlew dependencies -q 2>/dev/null || ./gradlew build --dry-run -q
+    else
+        gradle dependencies -q 2>/dev/null || gradle build --dry-run -q
+    fi
+    installed=1
+elif [ -f "pom.xml" ]; then
+    echo "Installing JVM deps (Maven)..."
+    if [ -f "./mvnw" ]; then
+        ./mvnw dependency:resolve -q
+    else
+        mvn dependency:resolve -q
+    fi
+    installed=1
+fi
+
+# --- Subdirectory scan (monorepo) ---
+if [ "${WT_DEPS_NO_RECURSE:-}" != "1" ]; then
+    export WT_DEPS_NO_RECURSE=1
+    for dir in */; do
+        [ -d "$dir" ] || continue
+        if [ -f "$dir/package.json" ] || [ -f "$dir/build.gradle" ] || [ -f "$dir/build.gradle.kts" ] || [ -f "$dir/pom.xml" ] || [ -f "$dir/go.mod" ] || [ -f "$dir/Cargo.toml" ]; then
+            echo ""
+            echo "Found deps in $dir — running wt-deps..."
+            "$0" "$dir"
+        fi
+    done
 fi
 
 if [ "$installed" = "0" ]; then

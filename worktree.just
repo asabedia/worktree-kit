@@ -12,6 +12,7 @@ wt-max-slots      := "9"
 wt-data-root      := ".docker-data"
 wt-scripts        := source_directory() / "scripts"
 wt-health-timeout := "60"             # seconds to wait for service health
+wt-compose-file   := ""               # compose file path ("" = auto-detect)
 
 # --- Docker commands with worktree isolation ---
 
@@ -20,41 +21,53 @@ wt-up *args:
     #!/bin/bash
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
     if [ "$SLOT" != "0" ]; then
+        export COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
         echo "Slot $SLOT:"
         env | grep '^WT_' | sort || true
     fi
-    docker compose up --build {{args}}
+    docker compose ${WT_COMPOSE_FILE:+-f "$WT_COMPOSE_FILE"} up --build {{args}}
 
 # Stop services
 wt-down *args:
     #!/bin/bash
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
-    docker compose down {{args}}
+    if [ "$SLOT" != "0" ]; then
+        export COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
+    fi
+    docker compose ${WT_COMPOSE_FILE:+-f "$WT_COMPOSE_FILE"} down {{args}}
 
 # Tail service logs
 wt-logs *args:
     #!/bin/bash
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
     SLOT="${WT_SLOT:-0}"
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
-    docker compose logs -f {{args}}
+    if [ "$SLOT" != "0" ]; then
+        export COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
+    fi
+    docker compose ${WT_COMPOSE_FILE:+-f "$WT_COMPOSE_FILE"} logs -f {{args}}
 
 # Show current slot and computed ports
 wt-status:
     #!/bin/bash
     [ -f .env.local ] && set -a && . .env.local && set +a
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
     SLOT="${WT_SLOT:-0}"
     if [ "$SLOT" = "0" ]; then
         echo "Main repo (slot 0) — using default ports"
     else
         echo "Slot: $SLOT"
+        export COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
     fi
     eval $({{wt-scripts}}/wt-env.sh "$SLOT") 2>/dev/null || true
     env | grep '^WT_' | sort || echo "(no wt.* labels found)"
@@ -129,6 +142,7 @@ wt-dev branch base="main":
     #!/bin/bash
     set -e
     # 1. Check system requirements
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
     {{wt-scripts}}/wt-doctor.sh "."
     # 2. Create worktree (same as wt-new)
     export WT_MAX_SLOTS={{wt-max-slots}}
@@ -150,6 +164,11 @@ wt-health:
     #!/bin/bash
     set -e
     [ -f .env.local ] && set -a && . .env.local && set +a
+    [ -n "{{wt-compose-file}}" ] && export WT_COMPOSE_FILE="{{wt-compose-file}}"
+    SLOT="${WT_SLOT:-0}"
+    if [ "$SLOT" != "0" ]; then
+        export COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
+    fi
     {{wt-scripts}}/wt-docker-ready.sh {{wt-health-timeout}} check
 
 # Remove merged worktrees

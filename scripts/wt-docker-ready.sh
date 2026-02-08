@@ -10,20 +10,30 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TIMEOUT="${1:-60}"
 MODE="${2:-full}"
 
-# Find compose file
-COMPOSE_FILE=""
-for f in docker-compose.yml compose.yml; do
-    [ -f "$f" ] && COMPOSE_FILE="$f" && break
-done
+# Source env
+[ -f .env.local ] && set -a && . .env.local && set +a
+SLOT="${WT_SLOT:-0}"
+
+# Find compose file: env var, then auto-detect
+COMPOSE_FILE="${WT_COMPOSE_FILE:-}"
+if [ -z "$COMPOSE_FILE" ]; then
+    for f in docker-compose.yml compose.yml; do
+        [ -f "$f" ] && COMPOSE_FILE="$f" && break
+    done
+fi
 
 if [ -z "$COMPOSE_FILE" ]; then
     echo "Error: No compose file found (docker-compose.yml or compose.yml)."
     exit 1
 fi
 
-# Source env and compute port vars
-[ -f .env.local ] && set -a && . .env.local && set +a
-SLOT="${WT_SLOT:-0}"
+# Isolate project name per worktree
+if [ "$SLOT" != "0" ]; then
+    COMPOSE_PROJECT_NAME="$(basename "$(pwd)")-wt${SLOT}"
+    export COMPOSE_PROJECT_NAME
+fi
+
+# Compute port vars
 eval $("$SCRIPT_DIR/wt-env.sh" "$SLOT" "$COMPOSE_FILE") 2>/dev/null || true
 
 # TCP probe — bash /dev/tcp with python3 fallback

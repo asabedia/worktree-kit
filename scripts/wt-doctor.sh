@@ -38,16 +38,18 @@ else
 fi
 check jq false
 
-# Require a compose file
-COMPOSE_FILE=""
-for f in "$PROJECT_DIR/docker-compose.yml" "$PROJECT_DIR/compose.yml"; do
-    [ -f "$f" ] && COMPOSE_FILE="$f" && break
-done
+# Require a compose file (respect WT_COMPOSE_FILE env var)
+COMPOSE_FILE="${WT_COMPOSE_FILE:-}"
 if [ -z "$COMPOSE_FILE" ]; then
+    for f in "$PROJECT_DIR/docker-compose.yml" "$PROJECT_DIR/compose.yml"; do
+        [ -f "$f" ] && COMPOSE_FILE="$f" && break
+    done
+fi
+if [ -z "$COMPOSE_FILE" ] || [ ! -f "$COMPOSE_FILE" ]; then
     printf "  %-20s MISSING\n" "compose file"
     MISSING=1
 else
-    printf "  %-20s ok\n" "compose file"
+    printf "  %-20s ok (%s)\n" "compose file" "$COMPOSE_FILE"
 fi
 
 # Project-specific tools from .wt-required-tools
