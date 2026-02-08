@@ -124,6 +124,103 @@ just wt-rm feature/auth
 
 You can run multiple worktrees simultaneously — each gets its own ports and data.
 
+## Agent-Ready Worktrees
+
+`wt-dev` creates a worktree where an agent can immediately run tests — no manual Docker setup needed:
+
+```bash
+just wt-dev feature/auth
+```
+
+This runs the full bootstrap:
+1. **`wt-doctor`** — verify git, just, docker, and project-specific tools
+2. **`wt-new`** — create worktree, allocate slot, install deps, run hooks
+3. **`wt-docker-ready`** — pull images, start services, TCP health-check all ports
+
+When it finishes, every service is responding and the worktree is ready for `just test`.
+
+### Health Checks
+
+Verify services are responding in the current worktree:
+
+```bash
+just wt-health
+```
+
+This TCP-probes every `WT_*_PORT` without restarting containers.
+
+### Requirement Checks
+
+`wt-doctor` runs automatically as part of `wt-dev`. You can also run the script directly:
+
+```bash
+scripts/wt-doctor.sh .
+```
+
+To declare project-specific tool requirements, create `.wt-required-tools` in your project root:
+
+```
+# one tool per line, # comments
+node
+psql
+redis-cli
+```
+
+## Compose Setup Guide
+
+For `wt-dev` to work well (especially with AI agents), your compose setup needs **volume mounts** and **hot-reload** so code changes reflect instantly without rebuilds.
+
+### Volume Mounts
+
+Mount your source code into the container so edits on the host are visible immediately:
+
+```yaml
+# Before — changes require rebuild
+services:
+  api:
+    build: .
+
+# After — changes reflect instantly
+services:
+  api:
+    build: .
+    volumes:
+      - ./src:/app/src    # source code mounted in
+```
+
+For Node.js services, preserve the container's `node_modules`:
+
+```yaml
+  frontend:
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # anonymous volume keeps container deps
+```
+
+### Hot-Reload
+
+Use dev servers that watch for file changes:
+
+| Stack | Command | Watches |
+|-------|---------|---------|
+| Python/FastAPI | `uvicorn main:app --reload` | `*.py` files |
+| Node/Vite | `vite --host 0.0.0.0` | `src/`, `index.html` |
+| Node/Next.js | `next dev` | `pages/`, `app/` |
+| Go/Air | `air` | `*.go` files |
+
+### Internal Networking
+
+Services talk to each other by **service name** over Docker's internal network. Port offsets only affect host-mapped ports:
+
+```yaml
+  backend:
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app
+      #                                           ^^ service name, not localhost
+```
+
+See [`examples/monolith/`](examples/monolith/) for a complete working setup.
+
 ## Env Var Naming
 
 Service names map to env vars: **uppercase, hyphens/dots to underscores**.
@@ -140,11 +237,13 @@ Service names map to env vars: **uppercase, hyphens/dots to underscores**.
 | Recipe               | Description                                        |
 |----------------------|----------------------------------------------------|
 | `wt-new branch [base]` | Create worktree + allocate slot + install deps  |
+| `wt-dev branch [base]` | `wt-new` + Docker pull/start/health-check (agent-ready) |
 | `wt-rm branch`       | Remove worktree + release slot + offer data cleanup |
 | `wt-up *args`        | `docker compose up --build` with slot env           |
 | `wt-down *args`      | `docker compose down` with slot env                 |
 | `wt-logs *args`      | `docker compose logs -f` with slot env              |
 | `wt-status`          | Show slot, ports, active slots                      |
+| `wt-health`          | TCP health-check all `WT_*_PORT` services           |
 | `wt-list`            | `git worktree list` + slot assignments              |
 | `wt-cd branch`       | Print worktree path (use: `cd $(just wt-cd branch)`) |
 | `wt-clean`           | Remove worktrees whose branches are merged into main |
@@ -155,9 +254,10 @@ Service names map to env vars: **uppercase, hyphens/dots to underscores**.
 Override in your justfile **before** the import:
 
 ```just
-wt-dir       := ".worktrees"     # where worktrees are created
-wt-max-slots := "9"              # max concurrent worktrees (1-9)
-wt-data-root := ".docker-data"   # docker data root directory
+wt-dir            := ".worktrees"     # where worktrees are created
+wt-max-slots      := "9"              # max concurrent worktrees (1-9)
+wt-data-root      := ".docker-data"   # docker data root directory
+wt-health-timeout := "60"             # seconds to wait for service health
 
 import "worktree-kit/worktree.just"
 ```
@@ -208,6 +308,7 @@ See the [`examples/`](examples/) directory:
 
 - **[`basic/`](examples/basic/)** — single Redis service with port isolation
 - **[`full-stack/`](examples/full-stack/)** — API + MongoDB + Web frontend with port and data isolation
+- **[`monolith/`](examples/monolith/)** — backend + frontend + Postgres with volume mounts and hot-reload (recommended starting point)
 
 ## License
 

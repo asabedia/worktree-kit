@@ -7,10 +7,11 @@
 set dotenv-load
 
 # --- Configurable variables (override in your justfile) ---
-wt-dir       := ".worktrees"
-wt-max-slots := "9"
-wt-data-root := ".docker-data"
-wt-scripts   := source_directory() / "scripts"
+wt-dir            := ".worktrees"
+wt-max-slots      := "9"
+wt-data-root      := ".docker-data"
+wt-scripts        := source_directory() / "scripts"
+wt-health-timeout := "60"             # seconds to wait for service health
 
 # --- Docker commands with worktree isolation ---
 
@@ -122,6 +123,34 @@ wt-prune:
 # Print worktree path (use with: cd $(just wt-cd branch))
 wt-cd branch:
     @echo "{{wt-dir}}/{{branch}}"
+
+# Create worktree + start Docker services (agent-ready)
+wt-dev branch base="main":
+    #!/bin/bash
+    set -e
+    # 1. Check system requirements
+    {{wt-scripts}}/wt-doctor.sh "."
+    # 2. Create worktree (same as wt-new)
+    export WT_MAX_SLOTS={{wt-max-slots}}
+    git fetch origin {{base}} --quiet
+    mkdir -p {{wt-dir}}
+    WT_PATH="{{wt-dir}}/{{branch}}"
+    git worktree add "$WT_PATH" -b {{branch}} origin/{{base}}
+    {{wt-scripts}}/wt-setup.sh "{{wt-dir}}" "$WT_PATH" "{{branch}}"
+    # 3. Docker bootstrap
+    echo ""
+    echo "Starting Docker services..."
+    cd "$WT_PATH"
+    {{wt-scripts}}/wt-docker-ready.sh {{wt-health-timeout}} full
+    echo ""
+    echo "Ready: cd {{wt-dir}}/{{branch}}"
+
+# Check health of Docker services in current worktree
+wt-health:
+    #!/bin/bash
+    set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
+    {{wt-scripts}}/wt-docker-ready.sh {{wt-health-timeout}} check
 
 # Remove merged worktrees
 wt-clean:

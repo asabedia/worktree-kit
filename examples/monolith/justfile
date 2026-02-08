@@ -1,0 +1,25 @@
+# Monolith example — backend + frontend + db
+
+import "../../worktree.just"
+
+# Start dev stack
+dev:
+    just wt-up -d
+
+# Run backend tests
+test:
+    #!/bin/bash
+    set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
+    SLOT="${WT_SLOT:-0}"
+    eval $(worktree-kit/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
+    docker compose exec backend python -m pytest
+
+# Run database migrations
+migrate:
+    #!/bin/bash
+    set -e
+    [ -f .env.local ] && set -a && . .env.local && set +a
+    SLOT="${WT_SLOT:-0}"
+    eval $(worktree-kit/scripts/wt-env.sh "$SLOT") 2>/dev/null || true
+    docker compose exec backend alembic upgrade head

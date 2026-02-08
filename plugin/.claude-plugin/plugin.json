@@ -1,0 +1,5 @@
+{
+  "name": "worktree-kit-onboard",
+  "version": "0.1.0",
+  "description": "Interactive onboarding wizard that integrates worktree-kit into existing projects — analyzes codebase, generates docker-compose with wt.* labels, sets up hot-reload, volume mounts, and justfile integration."
+}
