@@ -98,11 +98,11 @@ jobs:
       - name: Check referenced files exist
         run: |
           echo "Checking skill references..."
-          ERRORS=0
-          # Extract referenced files from SKILL.md
+          rm -f /tmp/ref_errors
+          # Match backtick-quoted resource refs like `references/foo.md` or **`references/foo.md`**
           for skill_dir in plugin/skills/*/; do
             [ -d "$skill_dir" ] || continue
-            grep -oE '(references|examples|scripts)/[a-zA-Z0-9._-]+\.(md|sh|py|json)' "${skill_dir}SKILL.md" 2>/dev/null | while read ref; do
+            grep -oE '`(references|examples|scripts)/[a-zA-Z0-9._-]+\.(md|sh|py|json)`' "${skill_dir}SKILL.md" 2>/dev/null | tr -d '`' | sort -u | while read ref; do
               if [ -f "${skill_dir}${ref}" ]; then
                 echo "OK: ${skill_dir}${ref}"
               else
