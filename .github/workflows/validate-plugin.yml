@@ -1,0 +1,118 @@
+name: Validate Plugin
+
+on:
+  push:
+    paths:
+      - 'plugin/**'
+      - '.claude-plugin/**'
+  pull_request:
+    paths:
+      - 'plugin/**'
+      - '.claude-plugin/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate marketplace.json
+        run: |
+          echo "Checking marketplace.json..."
+          python3 -c "
+          import json, sys
+          with open('.claude-plugin/marketplace.json') as f:
+              data = json.load(f)
+          assert 'name' in data, 'Missing name'
+          assert 'owner' in data, 'Missing owner'
+          assert 'plugins' in data, 'Missing plugins'
+          for p in data['plugins']:
+              assert 'name' in p, f'Plugin missing name'
+              assert 'source' in p, f'Plugin {p[\"name\"]} missing source'
+          print(f'Valid: {len(data[\"plugins\"])} plugin(s)')
+          "
+
+      - name: Validate plugin manifest
+        run: |
+          echo "Checking plugin.json..."
+          python3 -c "
+          import json
+          with open('plugin/.claude-plugin/plugin.json') as f:
+              data = json.load(f)
+          assert 'name' in data, 'Missing name'
+          print(f'Plugin: {data[\"name\"]} v{data.get(\"version\", \"unknown\")}')
+          "
+
+      - name: Validate plugin structure
+        run: |
+          echo "Checking plugin structure..."
+          ERRORS=0
+
+          # Required files
+          for f in plugin/.claude-plugin/plugin.json; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              ERRORS=$((ERRORS+1))
+            else
+              echo "OK: $f"
+            fi
+          done
+
+          # Commands have frontmatter
+          for f in plugin/commands/*.md; do
+            [ -f "$f" ] || continue
+            if head -1 "$f" | grep -q '^---'; then
+              echo "OK: $f (has frontmatter)"
+            else
+              echo "WARN: $f missing frontmatter"
+            fi
+          done
+
+          # Agents have frontmatter
+          for f in plugin/agents/*.md; do
+            [ -f "$f" ] || continue
+            if head -1 "$f" | grep -q '^---'; then
+              echo "OK: $f (has frontmatter)"
+            else
+              echo "WARN: $f missing frontmatter"
+            fi
+          done
+
+          # Skills have SKILL.md
+          for d in plugin/skills/*/; do
+            [ -d "$d" ] || continue
+            if [ -f "${d}SKILL.md" ]; then
+              echo "OK: ${d}SKILL.md"
+            else
+              echo "MISSING: ${d}SKILL.md"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "Validation failed with $ERRORS error(s)"
+            exit 1
+          fi
+          echo "All checks passed."
+
+      - name: Check referenced files exist
+        run: |
+          echo "Checking skill references..."
+          ERRORS=0
+          # Extract referenced files from SKILL.md
+          for skill_dir in plugin/skills/*/; do
+            [ -d "$skill_dir" ] || continue
+            grep -oE '(references|examples|scripts)/[a-zA-Z0-9._-]+\.(md|sh|py|json)' "${skill_dir}SKILL.md" 2>/dev/null | while read ref; do
+              if [ -f "${skill_dir}${ref}" ]; then
+                echo "OK: ${skill_dir}${ref}"
+              else
+                echo "MISSING: ${skill_dir}${ref}"
+                echo "1" > /tmp/ref_errors
+              fi
+            done
+          done
+          if [ -f /tmp/ref_errors ]; then
+            echo "Missing referenced files"
+            exit 1
+          fi
+          echo "All references valid."

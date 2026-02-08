@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "worktree-kit",
+  "version": "0.1.0",
+  "description": "Git worktree + Docker isolation toolkit with interactive onboarding",
+  "owner": {
+    "name": "asabedia"
+  },
+  "plugins": [
+    {
+      "name": "worktree-kit-onboard",
+      "description": "Interactive onboarding wizard that integrates worktree-kit into existing projects — analyzes codebase, generates docker-compose with wt.* labels, sets up hot-reload, volume mounts, and justfile integration.",
+      "source": "./plugin",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["worktree", "docker", "onboarding", "isolation", "devtools"]
+    }
+  ]
+}
