@@ -305,7 +305,7 @@ volumes:
 
 ### Spring Boot
 
-**Dockerfile:**
+**Dockerfile (Maven):**
 ```dockerfile
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
@@ -314,8 +314,12 @@ RUN ./mvnw dependency:resolve
 CMD ["./mvnw", "spring-boot:run"]
 ```
 
-For Gradle:
+**Dockerfile (Gradle):**
 ```dockerfile
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
+COPY . .
+RUN ./gradlew dependencies --no-daemon
 CMD ["./gradlew", "bootRun"]
 ```
 

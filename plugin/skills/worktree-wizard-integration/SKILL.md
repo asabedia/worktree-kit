@@ -30,7 +30,25 @@ services:
 - Container-internal port never changes — only host port offsets
 - Env var naming: `WT_{SERVICE_NAME_UPPER}_PORT` (hyphens/dots become underscores)
 - Always provide `:-default` fallback so slot 0 works without env vars
-- Services with multiple ports: use `wt.base-port` for the primary port only; additional ports use manual env var patterns
+- Services with multiple ports: use `wt.base-port` for the primary port. For additional ports, add manual env var patterns in your compose file:
+
+  ```yaml
+  spicedb:
+    labels:
+      wt.base-port: "50051"     # primary gRPC port
+    ports:
+      - "${WT_SPICEDB_PORT:-50051}:50051"
+      - "${WT_SPICEDB_HTTP_PORT:-8443}:8443"
+    environment:
+      - WT_SPICEDB_HTTP_PORT=${WT_SPICEDB_HTTP_PORT:-8443}
+  ```
+
+  Compute secondary ports in your post-setup hook:
+  ```bash
+  if [ -n "$WT_SLOT" ] && [ "$WT_SLOT" != "0" ]; then
+      echo "WT_SPICEDB_HTTP_PORT=$((8443 + WT_SLOT))" >> .env.local
+  fi
+  ```
 
 ### Data Isolation
 
@@ -43,6 +61,22 @@ To opt in to data isolation for a service, add a `wt.data-dir` label. This creat
     volumes:
       - ${WT_DB_DATA:-./.docker-data/db}:/var/lib/postgresql/data
 ```
+
+### Named Volume Isolation
+
+Named volumes are Docker-daemon-global. To isolate per worktree, suffix with `${WT_SLOT:-0}`:
+
+```yaml
+volumes:
+  gradle-cache-${WT_SLOT:-0}:
+
+services:
+  backend:
+    volumes:
+      - gradle-cache-${WT_SLOT:-0}:/home/gradle/.gradle
+```
+
+Alternatively, use bind mounts with `wt.data-dir` for automatic isolation.
 
 ### Internal Networking
 
@@ -106,6 +140,7 @@ Override config vars **before** the import if needed:
 
 ```just
 wt-health-timeout := "90"
+wt-compose-file   := "backend/docker-compose.yml"  # non-root compose file
 import "worktree-wizard/worktree.just"
 ```
 

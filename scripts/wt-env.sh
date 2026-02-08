@@ -10,10 +10,17 @@
 set -euo pipefail
 
 SLOT="${1:-0}"
-COMPOSE_FILE="${2:-docker-compose.yml}"
+COMPOSE_FILE="${2:-${WT_COMPOSE_FILE:-}}"
 DATA_ROOT="${WT_DATA_ROOT:-.docker-data}"
 
-if [ ! -f "$COMPOSE_FILE" ]; then
+# Auto-detect compose file if not specified
+if [ -z "$COMPOSE_FILE" ]; then
+    for f in docker-compose.yml compose.yml; do
+        [ -f "$f" ] && COMPOSE_FILE="$f" && break
+    done
+fi
+
+if [ -z "$COMPOSE_FILE" ] || [ ! -f "$COMPOSE_FILE" ]; then
     exit 0
 fi
 
