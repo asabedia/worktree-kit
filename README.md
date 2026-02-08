@@ -11,7 +11,7 @@ Run parallel feature branches with isolated Docker ports and data — zero confi
 ```bash
 # Install the plugin
 /plugin marketplace add asabedia/worktree-kit
-/plugin install worktree-kit-onboard@worktree-kit
+/plugin install worktree-wizard@worktree-kit
 
 # From your project repo, run the onboarding wizard
 /wt-onboard
@@ -335,13 +335,13 @@ just db-migrate
 
 ## Claude Code Plugin
 
-The `worktree-kit-onboard` plugin provides an interactive `/wt-onboard` command that automates the entire setup process.
+The `worktree-wizard` plugin provides an interactive `/wt-onboard` command that automates the entire setup process.
 
 ### Install
 
 ```bash
 /plugin marketplace add asabedia/worktree-kit
-/plugin install worktree-kit-onboard@worktree-kit
+/plugin install worktree-wizard@worktree-kit
 ```
 
 ### What it does

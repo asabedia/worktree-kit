@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "worktree-kit-onboard",
+      "name": "worktree-wizard",
       "description": "Interactive onboarding wizard that integrates worktree-kit into existing projects — analyzes codebase, generates docker-compose with wt.* labels, sets up hot-reload, volume mounts, and justfile integration.",
       "source": "./plugin",
       "version": "0.1.0",
